@@ -34,6 +34,32 @@
 3. **自動更新**: ページ読み込み時にAPI呼び出し
 4. **ローディング表示**: データ取得中のUI
 5. **エラーハンドリング**: API失敗時のフォールバック
+6. **API接続ステータス表示**: リアルタイムで接続状態を視覚的に表示
+
+### API接続ステータス機能
+
+ページヘッダーに接続状態をリアルタイム表示:
+
+| ステータス | インジケータ | 意味 |
+|-----------|-------------|------|
+| `connected` | 緑（点滅） | API正常接続中 |
+| `checking` | オレンジ（点滅） | 接続確認中 |
+| `cached` | 青 | キャッシュデータ使用中 |
+| `offline` | 赤 | 接続エラー |
+| `unconfigured` | グレー | API未設定（デモデータ） |
+
+#### 実装パターン
+```javascript
+function updateApiStatus(status, message) {
+    const statusContainer = document.getElementById('apiConnectionStatus');
+    const indicator = statusContainer.querySelector('.status-indicator');
+    const text = statusContainer.querySelector('.status-text');
+
+    indicator.className = 'status-indicator status-' + status;
+    statusContainer.className = 'api-status status-' + status + '-wrapper';
+    text.textContent = message;
+}
+```
 
 ## データ構造
 
@@ -68,6 +94,7 @@
 
 1. **ヘッダー**
    - ページタイトル
+   - **API接続ステータスインジケータ**（緑＝接続中、赤＝エラー等）
    - スプレッドシートへのリンクボタン
    - 更新ボタン
 

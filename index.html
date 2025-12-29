@@ -624,6 +624,11 @@
         <section id="inventory" class="page">
             <div class="page-header">
                 <h2><i class="fas fa-boxes"></i> 在庫管理</h2>
+                <!-- API接続ステータス -->
+                <div class="api-status" id="apiConnectionStatus">
+                    <span class="status-indicator status-checking"></span>
+                    <span class="status-text">接続確認中...</span>
+                </div>
                 <div class="page-actions">
                     <button class="btn btn-secondary" onclick="showPage('dashboard')">
                         <i class="fas fa-home"></i> ホーム

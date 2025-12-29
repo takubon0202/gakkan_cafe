@@ -3958,6 +3958,106 @@ button:focus-visible {
    在庫管理ページ
    =================================== */
 
+/* API接続ステータス */
+.api-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    margin-left: auto;
+    margin-right: calc(var(--spacing-unit) * 2);
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* 確認中 - 点滅オレンジ */
+.status-indicator.status-checking {
+    background: #f59e0b;
+    animation: pulse-checking 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-checking {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.9); }
+}
+
+/* 接続成功 - 緑 */
+.status-indicator.status-connected {
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    animation: pulse-connected 2s ease-in-out infinite;
+}
+
+@keyframes pulse-connected {
+    0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+    50% { box-shadow: 0 0 12px rgba(16, 185, 129, 0.8); }
+}
+
+/* オフライン/エラー - 赤 */
+.status-indicator.status-offline {
+    background: #ef4444;
+}
+
+/* キャッシュ使用 - 青 */
+.status-indicator.status-cached {
+    background: #3b82f6;
+}
+
+/* API未設定 - グレー */
+.status-indicator.status-unconfigured {
+    background: #9ca3af;
+}
+
+.api-status.status-connected-wrapper {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #059669;
+}
+
+.api-status.status-offline-wrapper {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+}
+
+.api-status.status-cached-wrapper {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #2563eb;
+}
+
+.api-status.status-unconfigured-wrapper {
+    background: rgba(156, 163, 175, 0.1);
+    border-color: rgba(156, 163, 175, 0.3);
+    color: #6b7280;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .api-status {
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: calc(var(--spacing-unit) * 1);
+        order: 3;
+        width: 100%;
+        justify-content: center;
+    }
+
+    #inventory .page-header {
+        flex-wrap: wrap;
+    }
+}
+
 /* 在庫サマリー */
 .inventory-summary {
     display: grid;

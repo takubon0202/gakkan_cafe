@@ -6,7 +6,7 @@
 const DATA_VERSION = '20251223-1';
 
 const initialData = {
-        menu: {
+    menu: {
         cafeLatte: {
             id: 'cafeLatte',
             name: 'カフェラテ',
@@ -901,7 +901,7 @@ const initialData = {
                         '体調不良者が出た場合：接触箇所の消毒、シフト調整、責任者報告。'
                     ]
                 },
-                    {
+                {
                     id: 'm3',
                     title: '温度記録と設備管理',
                     items: [
@@ -1626,7 +1626,7 @@ initialData.airpay = {
 
 // GAS API URL（デプロイ後に設定）
 // 設定手順: gas/README.md を参照
-const INVENTORY_API_URL = '';  // 例: 'https://script.google.com/macros/s/xxxxx/exec'
+const INVENTORY_API_URL = 'https://script.google.com/macros/s/AKfycbwPsdgYV8Q7ycv5hUDFAXTKjTPX5kJatgiTPE6hwcZjjcz6eVZV3quQ1Lm0B0xrrmRk/exec';  // 例: 'https://script.google.com/macros/s/xxxxx/exec'
 
 // スプレッドシートURL
 const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1iuTiIGV0Zz-AMx8aTcKZ0qSfI6kUSnZT4RZnWbgDCB8/edit';

@@ -1449,18 +1449,45 @@ function renderManagerHygiene() {
 // ===================================
 
 /**
+ * API接続ステータスを更新
+ * @param {string} status - 'checking' | 'connected' | 'offline' | 'cached' | 'unconfigured'
+ * @param {string} message - 表示メッセージ
+ */
+function updateApiStatus(status, message) {
+    const statusContainer = document.getElementById('apiConnectionStatus');
+    if (!statusContainer) return;
+
+    const indicator = statusContainer.querySelector('.status-indicator');
+    const text = statusContainer.querySelector('.status-text');
+
+    // ステータスクラスをリセット
+    indicator.className = 'status-indicator';
+    statusContainer.className = 'api-status';
+
+    // 新しいステータスを設定
+    indicator.classList.add(`status-${status}`);
+    statusContainer.classList.add(`status-${status}-wrapper`);
+    text.textContent = message;
+}
+
+/**
  * 在庫データを取得
  */
 async function fetchInventoryData() {
     // APIが設定されていない場合はフォールバックデータを使用
     if (!INVENTORY_API_URL) {
         console.log('在庫API未設定: フォールバックデータを使用');
+        updateApiStatus('unconfigured', 'API未設定（デモデータ）');
         return {
             ...fallbackInventoryData,
             timestamp: new Date().toISOString(),
-            isOffline: true
+            isOffline: true,
+            isUnconfigured: true
         };
     }
+
+    // 接続確認中を表示
+    updateApiStatus('checking', '接続確認中...');
 
     try {
         const response = await fetch(INVENTORY_API_URL);
@@ -1472,6 +1499,9 @@ async function fetchInventoryData() {
         // キャッシュに保存
         localStorage.setItem(STORAGE_KEYS.INVENTORY_CACHE, JSON.stringify(data));
 
+        // 接続成功を表示
+        updateApiStatus('connected', 'API接続中');
+
         return { ...data, isOffline: false };
     } catch (error) {
         console.error('在庫データ取得エラー:', error);
@@ -1480,11 +1510,13 @@ async function fetchInventoryData() {
         const cached = localStorage.getItem(STORAGE_KEYS.INVENTORY_CACHE);
         if (cached) {
             console.log('キャッシュからデータを使用');
+            updateApiStatus('cached', 'キャッシュ使用中');
             const cachedData = JSON.parse(cached);
             return { ...cachedData, isOffline: true, isCached: true };
         }
 
         // フォールバックデータを使用
+        updateApiStatus('offline', '接続エラー');
         return {
             ...fallbackInventoryData,
             timestamp: new Date().toISOString(),
