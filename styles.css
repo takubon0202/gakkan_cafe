@@ -4088,6 +4088,11 @@ button:focus-visible {
     background: rgba(198, 123, 92, 0.08);
 }
 
+.summary-card.summary-in-progress {
+    border-left: 4px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+}
+
 .summary-card.summary-ok {
     border-left: 4px solid var(--color-matcha);
     background: rgba(123, 153, 113, 0.08);
@@ -4107,6 +4112,11 @@ button:focus-visible {
 
 .summary-card.summary-warning .summary-icon {
     background: linear-gradient(135deg, var(--color-terracotta) 0%, #e8a88a 100%);
+    color: white;
+}
+
+.summary-card.summary-in-progress .summary-icon {
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
     color: white;
 }
 

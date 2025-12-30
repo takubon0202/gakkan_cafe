@@ -1570,6 +1570,7 @@ async function initInventoryPage() {
 function renderInventorySummary(data) {
     const totalEl = document.getElementById('totalItemsCount');
     const needsOrderEl = document.getElementById('needsOrderCount');
+    const inProgressEl = document.getElementById('inProgressCount');
     const completedEl = document.getElementById('inventoryCompletedCount');
     const lastUpdatedEl = document.getElementById('lastUpdated');
 
@@ -1604,6 +1605,7 @@ function renderInventorySummary(data) {
 
     if (totalEl) totalEl.textContent = totalItems || '-';
     if (needsOrderEl) needsOrderEl.textContent = needsOrderCount;
+    if (inProgressEl) inProgressEl.textContent = inProgressCount;
     if (completedEl) completedEl.textContent = completedCount;
 
     if (lastUpdatedEl) {
