@@ -1631,10 +1631,162 @@ const INVENTORY_API_URL = 'https://script.google.com/macros/s/AKfycbwPsdgYV8Q7yc
 // スプレッドシートURL
 const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1iuTiIGV0Zz-AMx8aTcKZ0qSfI6kUSnZT4RZnWbgDCB8/edit';
 
-// フォールバック用の在庫データ v2.0（APIが利用できない場合に表示）
-// 在庫管理シートの構造に準拠
+// =========================================
+// 在庫管理システム拡張性設定 v2.4
+// =========================================
+
+/**
+ * カテゴリ分類ルール（クライアント側）
+ * GAS側の CATEGORY_RULES と同期させる
+ * 新しいカテゴリを追加する場合はここに追記
+ */
+const INVENTORY_CATEGORY_RULES = {
+    'コーヒー': ['コーヒー豆', 'エスプレッソ'],
+    '乳製品・冷蔵': ['牛乳', 'ホイップクリーム', 'ミルク', '氷'],
+    'シロップ・ソース': ['チョコソース', 'キャラメルソース', 'バニラシロップ', 'チャイシロップ', 'ホワイトチョコソース'],
+    'パウダー・茶葉': ['抹茶パウダー', 'ほうじ茶パウダー', 'アールグレイ'],
+    '消耗品（容器）': ['紙カップ', 'フタ', 'プラカップ', 'プラフタ', 'マドラー', 'ストロー'],
+    '消耗品（調味料）': ['シュガー', 'ガムシロップ'],
+    '衛生・清掃用品': ['手袋', '消毒液', 'アルコール', 'ペーパータオル', 'スポンジ', '洗剤'],
+    'その他': []
+};
+
+/**
+ * 単位推測ルール（クライアント側）
+ * 優先度順に評価される（上から順に評価し、最初にマッチしたものを使用）
+ * 新しいルールを追加する場合はここに追記
+ */
+const INVENTORY_UNIT_RULES = [
+    // 優先度1: 商品タイプ
+    { pattern: 'ソース', unit: '本' },
+    { pattern: 'シロップ', unit: '本' },
+    { pattern: 'パウダー', unit: '袋' },
+    { pattern: '牛乳', unit: '本' },
+    { pattern: 'ホイップ', unit: '本' },
+    { pattern: 'クリーム', unit: '本' },
+    { pattern: '消毒', unit: '本' },
+    { pattern: '洗剤', unit: '本' },
+    { pattern: 'スプレー', unit: '本' },
+    { pattern: '氷', unit: '袋' },
+    { pattern: 'ティー', unit: '袋' },
+    { pattern: 'アールグレイ', unit: '袋' },
+    // 優先度2: 包装形態
+    { pattern: '個入り', unit: '箱' },
+    { pattern: '本入り', unit: '箱' },
+    { pattern: '袋', unit: '袋' },
+    { pattern: '組', unit: '組' },
+    { pattern: '手袋', unit: '箱' },
+    // 優先度3: コーヒー豆
+    { pattern: 'コーヒー豆', unit: 'g' }
+];
+
+/**
+ * 商品名からカテゴリを自動判定（クライアント側）
+ * @param {string} itemName - 商品名
+ * @returns {string} カテゴリ名
+ */
+function categorizeItemClient(itemName) {
+    const name = String(itemName).toLowerCase();
+    for (const [category, keywords] of Object.entries(INVENTORY_CATEGORY_RULES)) {
+        for (const keyword of keywords) {
+            if (name.includes(keyword.toLowerCase())) {
+                return category;
+            }
+        }
+    }
+    return 'その他';
+}
+
+/**
+ * 商品名から単位を推測（クライアント側）
+ * @param {string} itemName - 商品名
+ * @returns {string} 単位
+ */
+function inferUnitClient(itemName) {
+    const name = String(itemName).toLowerCase();
+    for (const rule of INVENTORY_UNIT_RULES) {
+        if (name.includes(rule.pattern.toLowerCase())) {
+            return rule.unit;
+        }
+    }
+    return '個'; // デフォルト
+}
+
+/**
+ * 在庫アイテムから派生データを自動生成
+ * orderList, inProgressList, summary, categories を items から生成
+ * @param {Array} items - 在庫アイテム配列
+ * @returns {Object} 派生データ
+ */
+function generateInventoryDerivedData(items) {
+    const orderList = [];
+    const inProgressList = [];
+    const categories = {};
+    let completed = 0;
+
+    items.forEach(item => {
+        // ステータスに基づいてリストを振り分け
+        if (item.statusType === 'pending' || item.needsOrder) {
+            orderList.push({
+                name: item.name,
+                category: item.category,
+                remaining: item.remaining,
+                orderLine: item.orderLine,
+                unit: item.unit,
+                statusType: 'pending'
+            });
+        } else if (item.statusType === 'in_progress' || item.inProgress) {
+            inProgressList.push({
+                name: item.name,
+                category: item.category,
+                remaining: item.remaining,
+                unit: item.unit,
+                statusType: 'in_progress'
+            });
+        } else {
+            completed++;
+        }
+
+        // カテゴリ別にグループ化
+        const category = item.category || 'その他';
+        if (!categories[category]) {
+            categories[category] = [];
+        }
+        categories[category].push(item);
+    });
+
+    // カテゴリ内を仕入れ状況優先でソート
+    for (const category of Object.keys(categories)) {
+        categories[category].sort((a, b) => {
+            if (a.needsOrder && !b.needsOrder) return -1;
+            if (!a.needsOrder && b.needsOrder) return 1;
+            if (a.inProgress && !b.inProgress) return -1;
+            if (!a.inProgress && b.inProgress) return 1;
+            return (a.stockRatio || 100) - (b.stockRatio || 100);
+        });
+    }
+
+    return {
+        orderList,
+        inProgressList,
+        categories,
+        summary: {
+            totalItems: items.length,
+            needsOrder: orderList.length,
+            inProgress: inProgressList.length,
+            completed: completed
+        }
+    };
+}
+
+// =========================================
+// フォールバック用の在庫データ v2.4
+// =========================================
+// 新しい商品を追加する場合は items 配列に追加するだけでOK
+// orderList, inProgressList, summary, categories は自動生成される
+
 const fallbackInventoryData = {
-    version: '2.3',
+    version: '2.4',
     items: [
         // コーヒー（全て完了）
         { name: 'コーヒー豆（シティーローストブラジル）（100g)', category: 'コーヒー', remaining: 2500, ideal: 2000, initial: 3000, orderLine: 1000, unit: 'g', purchaseStatus: '完了', status: '完了', statusType: 'completed', needsOrder: false, inProgress: false, stockRatio: 125 },
@@ -1688,30 +1840,20 @@ const fallbackInventoryData = {
         { name: 'ホイップクリーム', beforeOpen: '冷凍庫', afterOpen: '冷蔵庫', expiryDays: '5日', notes: '痛みに注意' },
         { name: '氷', beforeOpen: '冷凍庫', afterOpen: '冷凍庫', expiryDays: '特になし', notes: '特になし' }
     ],
-    // v2.3: 未申請アイテムのリスト（赤表示）
-    orderList: [
-        { name: 'チョコソース（240g）', category: 'シロップ・ソース', remaining: 1, orderLine: 2, unit: '本', statusType: 'pending' },
-        { name: 'キャラメルソース(240g)', category: 'シロップ・ソース', remaining: 1, orderLine: 1, unit: '本', statusType: 'pending' },
-        { name: '抹茶パウダー（170g）', category: 'パウダー・茶葉', remaining: 1, orderLine: 1, unit: '袋', statusType: 'pending' },
-        { name: '使いきり手袋', category: '衛生・清掃用品', remaining: 2, orderLine: 50, unit: '組', statusType: 'pending' },
-        { name: '消毒液　手用', category: '衛生・清掃用品', remaining: 2, orderLine: 2, unit: '本', statusType: 'pending' }
-    ],
-    // v2.3: 仕入れ申請中アイテムのリスト（オレンジ表示）
-    inProgressList: [
-        { name: 'バニラシロップ（250ml）', category: 'シロップ・ソース', remaining: 1, unit: '本', statusType: 'in_progress' },
-        { name: 'チャイシロップ（250ml）', category: 'シロップ・ソース', remaining: 1, unit: '本', statusType: 'in_progress' },
-        { name: 'ほうじ茶パウダー（170g)', category: 'パウダー・茶葉', remaining: 1, unit: '袋', statusType: 'in_progress' },
-        { name: 'キッチン用アルコール除菌スプレー', category: '衛生・清掃用品', remaining: 2, unit: '本', statusType: 'in_progress' },
-        { name: 'ペーパータオル', category: '衛生・清掃用品', remaining: 2, unit: '個', statusType: 'in_progress' }
-    ],
-    summary: {
-        totalItems: 28,
-        needsOrder: 5,      // 未申請
-        inProgress: 5,      // 仕入れ申請中
-        completed: 18       // 完了
-    },
+    // v2.4: orderList, inProgressList, summary, categories は自動生成
+    // generateInventoryDerivedData(items) で生成される
     timestamp: null
 };
+
+// v2.4: フォールバックデータの派生データを自動生成
+// これにより items を編集するだけで他のデータも自動更新される
+(function initializeFallbackData() {
+    const derived = generateInventoryDerivedData(fallbackInventoryData.items);
+    fallbackInventoryData.orderList = derived.orderList;
+    fallbackInventoryData.inProgressList = derived.inProgressList;
+    fallbackInventoryData.summary = derived.summary;
+    fallbackInventoryData.categories = derived.categories;
+})();
 
 // LocalStorageのキー
 const STORAGE_KEYS = {

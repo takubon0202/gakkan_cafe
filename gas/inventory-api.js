@@ -1,6 +1,30 @@
 /**
- * Cafe Foam 在庫管理 API v2.3
+ * Cafe Foam 在庫管理 API v2.4
  * Google Apps Script (GAS)
+ *
+ * =========================================
+ * 拡張性ガイド
+ * =========================================
+ *
+ * 【新しい商品を追加する場合】
+ * → スプレッドシートに行を追加するだけでOK（コード変更不要）
+ *
+ * 【新しいカテゴリを追加する場合】
+ * → CATEGORY_RULES に新しいカテゴリとキーワードを追加
+ * → data.js の INVENTORY_CATEGORY_RULES にも同じ内容を追加
+ *
+ * 【新しい単位ルールを追加する場合】
+ * → UNIT_RULES に新しいパターンと単位を追加
+ * → data.js の INVENTORY_UNIT_RULES にも同じ内容を追加
+ *
+ * =========================================
+ * バージョン履歴
+ * =========================================
+ *
+ * v2.4 変更点:
+ * - 拡張性を高めるためのリファクタリング
+ * - UNIT_RULES をテーブル化（配列ベース）
+ * - ドキュメントの充実
  *
  * v2.3 変更点:
  * - 発注判定を「仕入れ状況」列ベースに変更
@@ -10,19 +34,16 @@
  *
  * v2.2 変更点:
  * - 単位推測ロジック（inferUnit）を完全に書き直し
- * - 商品名のg/mlではなく、商品タイプ（ソース→本、パウダー→袋など）で単位を判定
  *
  * v2.1 変更点:
- * - カテゴリ分類ルールを実際のスプレッドシートデータに基づいて最適化
- * - 「乳製品」→「乳製品・冷蔵」に変更（氷を含む）
- * - 「衛生用品」→「衛生・清掃用品」に変更（スポンジ、洗剤を追加）
+ * - カテゴリ分類ルールを最適化
  *
  * v2.0 変更点:
  * - 「在庫管理」シートを主データソースとして使用
- * - カテゴリ自動分類機能を追加
- * - 在庫率（残数/理想残数）の計算を追加
  *
- * デプロイ手順:
+ * =========================================
+ * デプロイ手順
+ * =========================================
  * 1. https://script.google.com/ にアクセス
  * 2. 「新しいプロジェクト」を作成
  * 3. このコードを貼り付け
@@ -36,11 +57,22 @@
  * 更新時は「デプロイ」→「デプロイを管理」→「新しいバージョン」
  */
 
+// =========================================
+// 設定セクション
+// =========================================
+
 // スプレッドシートID
 const SPREADSHEET_ID = '1iuTiIGV0Zz-AMx8aTcKZ0qSfI6kUSnZT4RZnWbgDCB8';
 
-// カテゴリ分類ルール v2.1
-// 実際のスプレッドシートデータに基づいて最適化
+// =========================================
+// カテゴリ分類ルール v2.4
+// =========================================
+// 新しいカテゴリを追加する場合:
+// 1. 下記オブジェクトに 'カテゴリ名': ['キーワード1', 'キーワード2'] を追加
+// 2. data.js の INVENTORY_CATEGORY_RULES にも同じ内容を追加
+//
+// 注意: 最初にマッチしたカテゴリが適用されるため、
+// 特殊なキーワード（より限定的なもの）を先に定義すること
 const CATEGORY_RULES = {
   'コーヒー': ['コーヒー豆', 'エスプレッソ'],
   '乳製品・冷蔵': ['牛乳', 'ホイップクリーム', 'ミルク', '氷'],
@@ -49,8 +81,43 @@ const CATEGORY_RULES = {
   '消耗品（容器）': ['紙カップ', 'フタ', 'プラカップ', 'プラフタ', 'マドラー', 'ストロー'],
   '消耗品（調味料）': ['シュガー', 'ガムシロップ'],
   '衛生・清掃用品': ['手袋', '消毒液', 'アルコール', 'ペーパータオル', 'スポンジ', '洗剤'],
-  'その他': []
+  'その他': []  // フォールバック（キーワードなし）
 };
+
+// =========================================
+// 単位推測ルール v2.4
+// =========================================
+// 新しい単位ルールを追加する場合:
+// 1. 下記配列に { pattern: 'キーワード', unit: '単位' } を追加
+// 2. data.js の INVENTORY_UNIT_RULES にも同じ内容を追加
+//
+// 注意: 配列の上から順に評価され、最初にマッチしたルールが適用される
+// より限定的なパターンを上に配置すること
+const UNIT_RULES = [
+  // 優先度1: 商品タイプ（容器単位で数える商品）
+  { pattern: 'ソース', unit: '本' },
+  { pattern: 'シロップ', unit: '本' },
+  { pattern: 'パウダー', unit: '袋' },
+  { pattern: '牛乳', unit: '本' },
+  { pattern: 'ホイップ', unit: '本' },
+  { pattern: 'クリーム', unit: '本' },
+  { pattern: '消毒', unit: '本' },
+  { pattern: '洗剤', unit: '本' },
+  { pattern: 'スプレー', unit: '本' },
+  { pattern: '氷', unit: '袋' },
+  { pattern: 'パック', unit: '袋' },
+  { pattern: 'ティー', unit: '袋' },
+  { pattern: 'アールグレイ', unit: '袋' },
+  // 優先度2: 包装形態
+  { pattern: '個入り', unit: '箱' },
+  { pattern: '本入り', unit: '箱' },
+  { pattern: '袋', unit: '袋' },
+  { pattern: '組', unit: '組' },
+  { pattern: '手袋', unit: '箱' },
+  // 優先度3: コーヒー豆
+  { pattern: 'コーヒー豆', unit: 'g' }
+  // 新しいルールはここに追加
+];
 
 /**
  * 商品名からカテゴリを自動判定
@@ -72,54 +139,25 @@ function categorizeItem(itemName) {
 }
 
 /**
- * 単位を商品名から推測 v2.1
+ * 単位を商品名から推測 v2.4
+ * UNIT_RULES テーブルを使用してパターンマッチング
  * 商品の数え方（本、袋、箱など）を適切に判定
+ *
  * @param {string} itemName - 商品名
- * @param {number} value - 数値
+ * @param {number} value - 数値（現在未使用、将来の拡張用）
  * @returns {string} 単位
  */
 function inferUnit(itemName, value) {
   const name = String(itemName).toLowerCase();
 
-  // === 優先順位1: 商品タイプで判定（容器単位で数える商品）===
+  // UNIT_RULES テーブルを上から順に評価
+  for (const rule of UNIT_RULES) {
+    if (name.includes(rule.pattern.toLowerCase())) {
+      return rule.unit;
+    }
+  }
 
-  // ソース・シロップ類 → 本
-  if (name.includes('ソース') || name.includes('シロップ')) return '本';
-
-  // パウダー類 → 袋
-  if (name.includes('パウダー')) return '袋';
-
-  // 牛乳・クリーム類 → 本
-  if (name.includes('牛乳') || name.includes('ミルク') && !name.includes('個入り')) return '本';
-  if (name.includes('ホイップ') || name.includes('クリーム')) return '本';
-
-  // 茶葉・パック類 → 袋
-  if (name.includes('パック') || name.includes('ティー') || name.includes('アールグレイ')) return '袋';
-
-  // 消毒液・洗剤・スプレー類 → 本
-  if (name.includes('消毒') || name.includes('洗剤') || name.includes('スプレー')) return '本';
-
-  // 氷 → 袋
-  if (name.includes('氷')) return '袋';
-
-  // === 優先順位2: 包装形態で判定 ===
-
-  // 個入り・本入り → 箱
-  if (name.includes('個入り') || name.includes('本入り')) return '箱';
-
-  // 袋入り → 袋
-  if (name.includes('袋')) return '袋';
-
-  // 組 → 組
-  if (name.includes('組')) return '組';
-
-  // 手袋 → 箱
-  if (name.includes('手袋')) return '箱';
-
-  // === 優先順位3: コーヒー豆は重量で管理 ===
-  if (name.includes('コーヒー豆')) return 'g';
-
-  // === デフォルト ===
+  // デフォルト単位
   return '個';
 }
 
@@ -295,7 +333,7 @@ function doGet(e) {
     const response = {
       success: true,
       timestamp: new Date().toISOString(),
-      version: '2.3',
+      version: '2.4',
       summary: summary,
       items: items,
       categories: categories,
