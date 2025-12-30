@@ -1631,26 +1631,43 @@ const INVENTORY_API_URL = 'https://script.google.com/macros/s/AKfycbwPsdgYV8Q7yc
 // スプレッドシートURL
 const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1iuTiIGV0Zz-AMx8aTcKZ0qSfI6kUSnZT4RZnWbgDCB8/edit';
 
-// フォールバック用の在庫データ（APIが利用できない場合に表示）
+// フォールバック用の在庫データ v2.0（APIが利用できない場合に表示）
+// 在庫管理シートの構造に準拠
 const fallbackInventoryData = {
+    version: '2.0',
     items: [
-        { category: 'コーヒー（ブラック）', name: 'シティーローストブラジル', supplier: '豆煎', orderPoint: 2000, stock: 3000, unit: 'g', status: 'OK' },
-        { category: 'コーヒー（ラテ）', name: 'ヨーロピアン', supplier: '豆煎', orderPoint: 2000, stock: 3000, unit: 'g', status: 'OK' },
-        { category: 'ラテ', name: '牛乳', supplier: '生協', orderPoint: 8, stock: 10, unit: '本', status: 'OK' },
-        { category: 'ラテ', name: 'チョコソース', supplier: '業務スーパー', orderPoint: 500, stock: 1000, unit: 'g', status: 'OK' },
-        { category: 'ラテ', name: 'キャラメル', supplier: '業務スーパー', orderPoint: 500, stock: 1000, unit: 'g', status: 'OK' },
-        { category: 'ラテ', name: 'ホワイトチョコソース', supplier: 'amazon', orderPoint: 500, stock: 1000, unit: 'g', status: 'OK' },
-        { category: 'ラテ', name: 'バニラシロップ', supplier: 'amazon', orderPoint: 500, stock: 1000, unit: 'g', status: 'OK' },
-        { category: 'ラテ', name: 'チャイシロップ', supplier: 'amazon', orderPoint: 500, stock: 1000, unit: 'g', status: 'OK' },
-        { category: 'ラテ', name: '抹茶パウダー', supplier: 'amazon', orderPoint: 500, stock: 1000, unit: 'g', status: 'OK' },
-        { category: 'ラテ', name: 'ほうじ茶パウダー', supplier: 'amazon', orderPoint: 500, stock: 1000, unit: 'g', status: 'OK' },
-        { category: 'ラテ', name: 'ホイップクリーム', supplier: '業務スーパー', orderPoint: 1000, stock: 1000, unit: 'g', status: '発注' },
-        { category: 'お茶ラテ', name: 'グラニュー糖', supplier: '業務スーパー', orderPoint: 500, stock: 1000, unit: 'g', status: 'OK' },
-        { category: 'お茶ラテ', name: 'アールグレイティー', supplier: 'amazon', orderPoint: 50, stock: 1000, unit: '個', status: 'OK' },
-        { category: 'アイス', name: '氷（外部）', supplier: '業務スーパー', orderPoint: 2000, stock: 1000, unit: 'g', status: '発注' },
-        { category: '備品', name: 'シュガー（小分け）', supplier: '業務スーパー', orderPoint: 100, stock: 1000, unit: '個', status: 'OK' },
-        { category: '備品', name: 'ガムシロップ', supplier: '業務スーパー', orderPoint: 100, stock: 1000, unit: '個', status: 'OK' },
-        { category: '備品', name: 'ミルク', supplier: '業務スーパー', orderPoint: 100, stock: 1000, unit: '個', status: 'OK' }
+        // コーヒー
+        { name: 'コーヒー豆（シティーローストブラジル）', category: 'コーヒー', remaining: 2500, ideal: 2000, initial: 3000, orderLine: 1000, unit: 'g', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 125 },
+        { name: 'コーヒー豆（ヨーロピアン）（100g）', category: 'コーヒー', remaining: 3000, ideal: 2000, initial: 3000, orderLine: 1000, unit: 'g', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 150 },
+        // 乳製品
+        { name: '牛乳(1000ml)', category: '乳製品', remaining: 100, ideal: 15, initial: 10, orderLine: 10, unit: '本', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 667 },
+        { name: '氷（3kg）', category: '乳製品', remaining: 1, ideal: 1, initial: 1, orderLine: 0.5, unit: '袋', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        { name: 'ホイップクリーム(1L)', category: '乳製品', remaining: 1, ideal: 1, initial: 1, orderLine: 0.5, unit: '本', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        // シロップ・ソース
+        { name: 'チョコソース（240g）', category: 'シロップ・ソース', remaining: 1, ideal: 2, initial: 2, orderLine: 1, unit: '本', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        { name: 'キャラメルソース(240g)', category: 'シロップ・ソース', remaining: 1, ideal: 2, initial: 2, orderLine: 1, unit: '本', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        { name: 'バニラシロップ（250ml）', category: 'シロップ・ソース', remaining: 1, ideal: 2, initial: 2, orderLine: 1, unit: '本', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        { name: 'チャイシロップ（250ml）', category: 'シロップ・ソース', remaining: 1, ideal: 2, initial: 2, orderLine: 1, unit: '本', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        { name: 'ホワイトチョコソース(500ml)', category: 'シロップ・ソース', remaining: 1, ideal: 2, initial: 2, orderLine: 0.5, unit: '本', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        // パウダー・茶葉
+        { name: '抹茶パウダー（170g）', category: 'パウダー・茶葉', remaining: 1, ideal: 2, initial: 2, orderLine: 1, unit: '袋', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        { name: 'ほうじ茶パウダー（170g）', category: 'パウダー・茶葉', remaining: 1, ideal: 2, initial: 2, orderLine: 1, unit: '袋', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        { name: 'アールグレイパック（20個）', category: 'パウダー・茶葉', remaining: 1, ideal: 2, initial: 2, orderLine: 1, unit: '袋', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        // 消耗品（容器）
+        { name: '紙カップ（1200個入り）', category: '消耗品（容器）', remaining: 1, ideal: 2, initial: 2, orderLine: 0.5, unit: '箱', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        { name: 'フタ（1200個入り）', category: '消耗品（容器）', remaining: 1, ideal: 1, initial: 1, orderLine: 0.5, unit: '箱', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        { name: 'プラカップ（1000個入り）', category: '消耗品（容器）', remaining: 1, ideal: 1, initial: 1, orderLine: 0.5, unit: '箱', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        { name: 'マドラー（1000個入り）', category: '消耗品（容器）', remaining: 1, ideal: 1, initial: 1, orderLine: 0.5, unit: '箱', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        { name: 'ストロー(500本×2)', category: '消耗品（容器）', remaining: 2, ideal: 2, initial: 2, orderLine: 1, unit: '袋', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        // 消耗品（調味料）
+        { name: 'シュガー(3g×120本入り)', category: '消耗品（調味料）', remaining: 2, ideal: 2, initial: 2, orderLine: 1, unit: '袋', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        { name: 'ガムシロップ（15g×50個入り）', category: '消耗品（調味料）', remaining: 2, ideal: 2, initial: 2, orderLine: 1, unit: '袋', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        { name: 'ミルク（55個入り）', category: '消耗品（調味料）', remaining: 2, ideal: 2, initial: 2, orderLine: 1, unit: '袋', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        // 衛生用品
+        { name: '使いきり手袋', category: '衛生用品', remaining: 2, ideal: 2, initial: 2, orderLine: 1, unit: '組', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        { name: '消毒液 手用', category: '衛生用品', remaining: 2, ideal: 2, initial: 2, orderLine: 1, unit: '本', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 100 },
+        { name: 'キッチン用アルコール除菌スプレー', category: '衛生用品', remaining: 1, ideal: 2, initial: 2, orderLine: 1, unit: '本', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 },
+        { name: 'ペーパータオル', category: '衛生用品', remaining: 1, ideal: 2, initial: 2, orderLine: 1, unit: '個', purchaseStatus: '完了', status: 'OK', needsOrder: false, stockRatio: 50 }
     ],
     storage: [
         { name: 'コーヒー豆', beforeOpen: '常温', afterOpen: '常温', expiryDays: '2週間', notes: '瓶で密封' },
@@ -1668,10 +1685,12 @@ const fallbackInventoryData = {
         { name: 'ホイップクリーム', beforeOpen: '冷凍庫', afterOpen: '冷蔵庫', expiryDays: '5日', notes: '痛みに注意' },
         { name: '氷', beforeOpen: '冷凍庫', afterOpen: '冷凍庫', expiryDays: '特になし', notes: '特になし' }
     ],
+    orderList: [],  // 発注が必要なアイテムリスト（サンプルでは空）
     summary: {
-        totalItems: 17,
-        needsOrder: 2,
-        okItems: 15
+        totalItems: 24,
+        needsOrder: 0,
+        lowStock: 8,
+        okItems: 16
     },
     timestamp: null
 };

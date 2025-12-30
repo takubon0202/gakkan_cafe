@@ -4338,6 +4338,130 @@ button:focus-visible {
     background: linear-gradient(90deg, var(--color-terracotta) 0%, #e8a88a 100%);
 }
 
+.stock-bar.bar-danger {
+    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
+/* 発注アラートセクション */
+.order-alert-section {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(248, 113, 113, 0.05) 100%);
+    border: 2px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--border-radius-lg);
+    padding: calc(var(--spacing-unit) * 2);
+    margin-bottom: calc(var(--spacing-unit) * 3);
+}
+
+.order-alert-title {
+    color: #dc2626;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: calc(var(--spacing-unit) * 1.5);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.order-alert-title i {
+    animation: pulse-alert 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-alert {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.order-list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 1);
+}
+
+.order-item {
+    background: white;
+    padding: calc(var(--spacing-unit) * 1.5);
+    border-radius: var(--border-radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid #ef4444;
+}
+
+.order-item-name {
+    font-weight: 600;
+    color: var(--color-espresso);
+}
+
+.order-item-info {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.order-item-info strong {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+/* カテゴリアラートバッジ */
+.category-alert {
+    background: #ef4444;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+/* 残少ステータス */
+.inventory-item.status-low {
+    border-left: 4px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.item-status.status-low {
+    color: #d97706;
+}
+
+/* 在庫率表示 */
+.stock-ratio {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-left: 0.5rem;
+}
+
+/* 閾値表示 */
+.item-thresholds {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.threshold-ideal {
+    color: var(--color-matcha);
+}
+
+.threshold-order {
+    color: var(--color-terracotta);
+}
+
+/* 仕入れ状況 */
+.item-purchase-status {
+    font-size: 0.8rem;
+    color: var(--color-matcha);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: calc(var(--spacing-unit) * 0.5);
+    padding-top: calc(var(--spacing-unit) * 0.5);
+    border-top: 1px dashed var(--border-color);
+}
+
+.item-purchase-status i {
+    font-size: 0.75rem;
+}
+
 .item-supplier {
     font-size: 0.8rem;
     color: var(--text-secondary);

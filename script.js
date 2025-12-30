@@ -1603,7 +1603,7 @@ function renderInventorySummary(data) {
 }
 
 /**
- * 在庫一覧を表示
+ * 在庫一覧を表示（v2.0対応）
  */
 function renderInventoryList(data, container) {
     if (!container) return;
@@ -1614,15 +1614,17 @@ function renderInventoryList(data, container) {
         return;
     }
 
-    // カテゴリでグループ化
-    const categories = {};
-    items.forEach(item => {
-        const category = item.category || 'その他';
-        if (!categories[category]) {
-            categories[category] = [];
-        }
-        categories[category].push(item);
-    });
+    // カテゴリでグループ化（APIからcategoriesが来る場合はそれを使用）
+    const categories = data.categories || {};
+    if (Object.keys(categories).length === 0) {
+        items.forEach(item => {
+            const category = item.category || 'その他';
+            if (!categories[category]) {
+                categories[category] = [];
+            }
+            categories[category].push(item);
+        });
+    }
 
     let html = '';
 
@@ -1636,22 +1638,63 @@ function renderInventoryList(data, container) {
         `;
     }
 
+    // 発注が必要なアイテムを先に表示
+    if (data.orderList && data.orderList.length > 0) {
+        html += `
+            <div class="order-alert-section">
+                <h3 class="order-alert-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    発注が必要なアイテム（${data.orderList.length}件）
+                </h3>
+                <div class="order-list">
+        `;
+        data.orderList.forEach(item => {
+            html += `
+                <div class="order-item">
+                    <span class="order-item-name">${item.name}</span>
+                    <span class="order-item-info">
+                        残数: <strong>${item.remaining}</strong>${item.unit}
+                        （発注ライン: ${item.orderLine}${item.unit}）
+                    </span>
+                </div>
+            `;
+        });
+        html += '</div></div>';
+    }
+
     // カテゴリ別に表示
     Object.entries(categories).forEach(([category, categoryItems]) => {
+        const needsOrderCount = categoryItems.filter(i => i.needsOrder || i.status === '発注').length;
+
         html += `
             <div class="inventory-category">
                 <h3 class="category-title">
                     <i class="fas fa-folder"></i> ${category}
                     <span class="category-count">${categoryItems.length}件</span>
+                    ${needsOrderCount > 0 ? `<span class="category-alert">${needsOrderCount}件要発注</span>` : ''}
                 </h3>
                 <div class="inventory-items">
         `;
 
         categoryItems.forEach(item => {
-            const statusClass = item.status === '発注' ? 'status-order' : 'status-ok';
-            const statusIcon = item.status === '発注' ? 'fa-exclamation-triangle' : 'fa-check-circle';
-            const stockPercent = item.orderPoint > 0 ? Math.min(100, (item.stock / item.orderPoint) * 100) : 100;
-            const barClass = stockPercent <= 100 ? 'bar-warning' : 'bar-ok';
+            // v2.0: remaining/stockRatio/orderLine を使用、v1.0互換: stock/orderPoint も対応
+            const stock = item.remaining !== undefined ? item.remaining : item.stock;
+            const orderPoint = item.orderLine !== undefined ? item.orderLine : item.orderPoint;
+            const ideal = item.ideal || orderPoint * 2;
+            const stockRatio = item.stockRatio !== undefined ? item.stockRatio : (ideal > 0 ? Math.round((stock / ideal) * 100) : 100);
+
+            const needsOrder = item.needsOrder || item.status === '発注';
+            const statusClass = needsOrder ? 'status-order' : (stockRatio < 50 ? 'status-low' : 'status-ok');
+            const statusIcon = needsOrder ? 'fa-exclamation-triangle' : (stockRatio < 50 ? 'fa-exclamation-circle' : 'fa-check-circle');
+            const statusText = needsOrder ? '要発注' : (stockRatio < 50 ? '残少' : 'OK');
+
+            // 在庫バーの色
+            let barClass = 'bar-ok';
+            if (needsOrder) {
+                barClass = 'bar-danger';
+            } else if (stockRatio < 50) {
+                barClass = 'bar-warning';
+            }
 
             html += `
                 <div class="inventory-item ${statusClass}">
@@ -1659,24 +1702,28 @@ function renderInventoryList(data, container) {
                         <span class="item-name">${item.name}</span>
                         <span class="item-status ${statusClass}">
                             <i class="fas ${statusIcon}"></i>
-                            ${item.status}
+                            ${statusText}
                         </span>
                     </div>
                     <div class="item-details">
                         <div class="item-stock">
-                            <span class="stock-value">${item.stock}</span>
-                            <span class="stock-unit">${item.unit}</span>
+                            <span class="stock-value">${stock}</span>
+                            <span class="stock-unit">${item.unit || '個'}</span>
+                            <span class="stock-ratio">(${stockRatio}%)</span>
                         </div>
-                        <div class="item-order-point">
-                            発注点: ${item.orderPoint}${item.unit}
+                        <div class="item-thresholds">
+                            <span class="threshold-ideal">理想: ${ideal}${item.unit || '個'}</span>
+                            <span class="threshold-order">発注ライン: ${orderPoint}${item.unit || '個'}</span>
                         </div>
                     </div>
                     <div class="stock-bar-container">
-                        <div class="stock-bar ${barClass}" style="width: ${Math.min(100, stockPercent)}%"></div>
+                        <div class="stock-bar ${barClass}" style="width: ${Math.min(100, stockRatio)}%"></div>
                     </div>
-                    <div class="item-supplier">
-                        <i class="fas fa-truck"></i> ${item.supplier || '未設定'}
+                    ${item.purchaseStatus ? `
+                    <div class="item-purchase-status">
+                        <i class="fas fa-clipboard-check"></i> ${item.purchaseStatus}
                     </div>
+                    ` : ''}
                 </div>
             `;
         });
