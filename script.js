@@ -1672,11 +1672,13 @@ function renderInventoryList(data, container) {
                 <div class="order-list">
         `;
         data.orderList.forEach(item => {
+            // v2.5: クライアント側で単位を再推測
+            const unit = (typeof inferUnitClient === 'function') ? inferUnitClient(item.name) : (item.unit || '個');
             html += `
                 <div class="order-item status-pending-item">
                     <span class="order-item-name">${item.name}</span>
                     <span class="order-item-info">
-                        残数: <strong>${item.remaining}</strong>${item.unit}
+                        残数: <strong>${item.remaining}</strong>${unit}
                     </span>
                 </div>
             `;
@@ -1695,11 +1697,13 @@ function renderInventoryList(data, container) {
                 <div class="in-progress-list">
         `;
         data.inProgressList.forEach(item => {
+            // v2.5: クライアント側で単位を再推測
+            const unit = (typeof inferUnitClient === 'function') ? inferUnitClient(item.name) : (item.unit || '個');
             html += `
                 <div class="in-progress-item status-in-progress-item">
                     <span class="in-progress-item-name">${item.name}</span>
                     <span class="in-progress-item-info">
-                        残数: <strong>${item.remaining}</strong>${item.unit}
+                        残数: <strong>${item.remaining}</strong>${unit}
                     </span>
                 </div>
             `;
@@ -1729,6 +1733,9 @@ function renderInventoryList(data, container) {
             const orderPoint = item.orderLine !== undefined ? item.orderLine : item.orderPoint;
             const ideal = item.ideal || orderPoint * 2;
             const stockRatio = item.stockRatio !== undefined ? item.stockRatio : (ideal > 0 ? Math.round((stock / ideal) * 100) : 100);
+
+            // v2.5: クライアント側で単位を再推測（APIの単位が正しくない場合のフォールバック）
+            const unit = (typeof inferUnitClient === 'function') ? inferUnitClient(item.name) : (item.unit || '個');
 
             // v2.3: 仕入れ状況ベースの表示
             const statusType = item.statusType || (item.purchaseStatus === '未申請' ? 'pending' : (item.purchaseStatus === '仕入れ申請中' ? 'in_progress' : 'completed'));
@@ -1765,12 +1772,12 @@ function renderInventoryList(data, container) {
                     <div class="item-details">
                         <div class="item-stock">
                             <span class="stock-value">${stock}</span>
-                            <span class="stock-unit">${item.unit || '個'}</span>
+                            <span class="stock-unit">${unit}</span>
                             <span class="stock-ratio">(${stockRatio}%)</span>
                         </div>
                         <div class="item-thresholds">
-                            <span class="threshold-ideal">理想: ${ideal}${item.unit || '個'}</span>
-                            <span class="threshold-order">発注ライン: ${orderPoint}${item.unit || '個'}</span>
+                            <span class="threshold-ideal">理想: ${ideal}${unit}</span>
+                            <span class="threshold-order">発注ライン: ${orderPoint}${unit}</span>
                         </div>
                     </div>
                     <div class="stock-bar-container">
