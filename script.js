@@ -1573,19 +1573,40 @@ function renderInventorySummary(data) {
     const completedEl = document.getElementById('completedCount');
     const lastUpdatedEl = document.getElementById('lastUpdated');
 
-    if (data.summary) {
-        if (totalEl) totalEl.textContent = data.summary.totalItems || data.items?.length || '-';
-        if (needsOrderEl) needsOrderEl.textContent = data.summary.needsOrder || '-';
-        // v2.4: completed を使用（okItems はフォールバック）
-        if (completedEl) completedEl.textContent = data.summary.completed || data.summary.okItems || '-';
+    // 総数
+    const totalItems = data.summary?.totalItems || data.items?.length || 0;
+
+    // 発注が必要な数（未申請）
+    let needsOrderCount = 0;
+    if (data.summary?.needsOrder !== undefined) {
+        needsOrderCount = data.summary.needsOrder;
     } else if (data.items) {
-        // v2.4: statusType ベースでカウント
-        const needsOrder = data.items.filter(item => item.statusType === 'pending' || item.needsOrder).length;
-        const completed = data.items.filter(item => item.statusType === 'completed' || (!item.needsOrder && !item.inProgress)).length;
-        if (totalEl) totalEl.textContent = data.items.length;
-        if (needsOrderEl) needsOrderEl.textContent = needsOrder;
-        if (completedEl) completedEl.textContent = completed;
+        needsOrderCount = data.items.filter(item => item.statusType === 'pending' || item.needsOrder).length;
     }
+
+    // 完了数（v2.4: 複数の方法で計算）
+    let completedCount = 0;
+    if (data.summary?.completed !== undefined) {
+        // v2.4形式: summary.completed がある場合
+        completedCount = data.summary.completed;
+    } else if (data.summary?.okItems !== undefined) {
+        // 旧形式: summary.okItems がある場合
+        completedCount = data.summary.okItems;
+    } else if (data.items) {
+        // items から計算
+        completedCount = data.items.filter(item =>
+            item.statusType === 'completed' ||
+            (item.purchaseStatus === '完了') ||
+            (!item.needsOrder && !item.inProgress)
+        ).length;
+    } else {
+        // 計算できない場合は総数から発注数を引く
+        completedCount = totalItems - needsOrderCount - (data.summary?.inProgress || 0);
+    }
+
+    if (totalEl) totalEl.textContent = totalItems || '-';
+    if (needsOrderEl) needsOrderEl.textContent = needsOrderCount;
+    if (completedEl) completedEl.textContent = completedCount;
 
     if (lastUpdatedEl) {
         if (data.timestamp) {
