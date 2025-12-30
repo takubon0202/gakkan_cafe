@@ -1570,19 +1570,21 @@ async function initInventoryPage() {
 function renderInventorySummary(data) {
     const totalEl = document.getElementById('totalItemsCount');
     const needsOrderEl = document.getElementById('needsOrderCount');
-    const okEl = document.getElementById('okItemsCount');
+    const completedEl = document.getElementById('completedCount');
     const lastUpdatedEl = document.getElementById('lastUpdated');
 
     if (data.summary) {
         if (totalEl) totalEl.textContent = data.summary.totalItems || data.items?.length || '-';
         if (needsOrderEl) needsOrderEl.textContent = data.summary.needsOrder || '-';
-        if (okEl) okEl.textContent = data.summary.okItems || '-';
+        // v2.4: completed を使用（okItems はフォールバック）
+        if (completedEl) completedEl.textContent = data.summary.completed || data.summary.okItems || '-';
     } else if (data.items) {
-        const needsOrder = data.items.filter(item => item.status === '発注').length;
-        const ok = data.items.filter(item => item.status === 'OK').length;
+        // v2.4: statusType ベースでカウント
+        const needsOrder = data.items.filter(item => item.statusType === 'pending' || item.needsOrder).length;
+        const completed = data.items.filter(item => item.statusType === 'completed' || (!item.needsOrder && !item.inProgress)).length;
         if (totalEl) totalEl.textContent = data.items.length;
         if (needsOrderEl) needsOrderEl.textContent = needsOrder;
-        if (okEl) okEl.textContent = ok;
+        if (completedEl) completedEl.textContent = completed;
     }
 
     if (lastUpdatedEl) {
