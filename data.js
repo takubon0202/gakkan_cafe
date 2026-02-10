@@ -1626,7 +1626,7 @@ initialData.airpay = {
 
 // GAS API URL（デプロイ後に設定）
 // 設定手順: gas/README.md を参照
-const INVENTORY_API_URL = 'https://script.google.com/macros/s/AKfycbwPsdgYV8Q7ycv5hUDFAXTKjTPX5kJatgiTPE6hwcZjjcz6eVZV3quQ1Lm0B0xrrmRk/exec';  // 例: 'https://script.google.com/macros/s/xxxxx/exec'
+const INVENTORY_API_URL = 'https://script.google.com/macros/s/AKfycbzF2lU46kc4qWXHx7Xf55xvG583r6taRKq0R0GqlN7AcCx6hV1DKBWq0eRQioLx7EB3/exec';  // 例: 'https://script.google.com/macros/s/xxxxx/exec'
 
 // スプレッドシートURL
 const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1ulBqzA_lS_J7eJeR2u0t5Mzkzyj-Z4BH-f9XRVBf9T4/edit';
