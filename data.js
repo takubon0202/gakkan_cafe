@@ -1629,7 +1629,7 @@ initialData.airpay = {
 const INVENTORY_API_URL = 'https://script.google.com/macros/s/AKfycbwPsdgYV8Q7ycv5hUDFAXTKjTPX5kJatgiTPE6hwcZjjcz6eVZV3quQ1Lm0B0xrrmRk/exec';  // 例: 'https://script.google.com/macros/s/xxxxx/exec'
 
 // スプレッドシートURL
-const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1iuTiIGV0Zz-AMx8aTcKZ0qSfI6kUSnZT4RZnWbgDCB8/edit';
+const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1ulBqzA_lS_J7eJeR2u0t5Mzkzyj-Z4BH-f9XRVBf9T4/edit';
 
 // =========================================
 // 在庫管理システム拡張性設定 v2.4

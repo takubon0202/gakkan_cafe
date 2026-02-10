@@ -12,7 +12,7 @@
 
 ## 対象スプレッドシート
 
-- **URL**: https://docs.google.com/spreadsheets/d/1iuTiIGV0Zz-AMx8aTcKZ0qSfI6kUSnZT4RZnWbgDCB8/edit
+- **URL**: https://docs.google.com/spreadsheets/d/1ulBqzA_lS_J7eJeR2u0t5Mzkzyj-Z4BH-f9XRVBf9T4/edit
 - **メインデータソース**: `在庫管理`シート（v2.0で変更）
 - **シート構成**:
   - `在庫管理`: **メイン在庫リスト**（商品名、仕入れ状況、残数、理想残数、初期仕入れ数、仕入れライン）

@@ -66,7 +66,7 @@
 // =========================================
 
 // スプレッドシートID
-const SPREADSHEET_ID = '1iuTiIGV0Zz-AMx8aTcKZ0qSfI6kUSnZT4RZnWbgDCB8';
+const SPREADSHEET_ID = '1ulBqzA_lS_J7eJeR2u0t5Mzkzyj-Z4BH-f9XRVBf9T4';
 
 // =========================================
 // カテゴリ分類ルール v2.4

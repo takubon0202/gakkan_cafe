@@ -178,7 +178,7 @@ Google Spreadsheetと連携し、在庫状況をリアルタイムで表示し�
 ### スプレッドシートURL
 
 ```
-https://docs.google.com/spreadsheets/d/1iuTiIGV0Zz-AMx8aTcKZ0qSfI6kUSnZT4RZnWbgDCB8/edit
+https://docs.google.com/spreadsheets/d/1ulBqzA_lS_J7eJeR2u0t5Mzkzyj-Z4BH-f9XRVBf9T4/edit
 ```
 
 ---
@@ -264,7 +264,7 @@ const stockRatio = ideal > 0 ? Math.round((remaining / ideal) * 100) : 100;
 ### GASコード概要（v2.0）
 
 ```javascript
-const SPREADSHEET_ID = '1iuTiIGV0Zz-AMx8aTcKZ0qSfI6kUSnZT4RZnWbgDCB8';
+const SPREADSHEET_ID = '1ulBqzA_lS_J7eJeR2u0t5Mzkzyj-Z4BH-f9XRVBf9T4';
 
 function doGet(e) {
   const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
